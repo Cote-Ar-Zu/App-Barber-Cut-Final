@@ -1,20 +1,25 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# BarberCut ABC
 
-# Run and deploy your AI Studio app
+Analizador de servicios para barberías y estéticas, basado en clasificación ABC (Ley de Pareto).
 
-This contains everything you need to run your app locally.
+## Flujo de uso
 
-View your app in AI Studio: https://ai.studio/apps/cafefe58-3d4c-4603-a375-73643107d5af
+1. **Ingreso de barberos**: al entrar, se solicita el nombre de cada barbero/estilista del local.
+2. **Carga de ventas**: se sube un CSV con las ventas, o se descarga una plantilla precargada con los nombres ya ingresados.
+3. **Dashboard**: se muestra el análisis ABC (curva de Pareto, resumen de ingresos, tabla de servicios) y se puede exportar el archivo de vuelta.
 
-## Run Locally
+## Formato del CSV
 
-**Prerequisites:**  Node.js
+```
+sku,nombre_servicio,costo_unitario,precio_venta,barbero,unidades_vendidas
+001,Corte de Cabello Tradicional,4500,15000,Carlos Soto,99
+```
 
+Cada fila representa las ventas de **un servicio realizado por un barbero específico**. Si cuatro barberos venden el mismo servicio, hay cuatro filas con el mismo `sku` pero distinto `barbero`.
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## Desarrollo
+
+```
+npm install
+npm run dev
+```

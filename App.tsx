@@ -7,27 +7,26 @@ import React, { useState } from 'react';
 import { RawServiceData, ComputedServiceData, ABCAnalysisSummary } from './types';
 import { performABCAnalysis } from './utils/csvParser';
 import Header from './components/Header';
+import BarberoSetup from './components/BarberoSetup';
 import Dropzone from './components/Dropzone';
 import ParetoChart from './components/ParetoChart';
 import AnalyticsSummary from './components/AnalyticsSummary';
 import ServiceTable from './components/ServiceTable';
 import ServiceDetailModal from './components/ServiceDetailModal';
 import { motion, AnimatePresence } from 'motion/react';
-import { 
-  PlusCircle, 
-  Trash2, 
-  Sparkles, 
-  FileDown, 
-  HelpCircle, 
-  AlertTriangle, 
-  Check, 
-  ChevronRight, 
-  TrendingUp, 
-  ArrowLeft 
+import {
+  FileDown,
+  AlertTriangle,
+  Check,
+  TrendingUp,
+  ArrowLeft
 } from 'lucide-react';
 
+type Stage = 'barberos' | 'upload' | 'dashboard';
+
 export default function App() {
-  const [dataLoaded, setDataLoaded] = useState(false);
+  const [stage, setStage] = useState<Stage>('barberos');
+  const [barberos, setBarberos] = useState<string[]>([]);
   const [rawServices, setRawServices] = useState<RawServiceData[]>([]);
   const [computedServices, setComputedServices] = useState<ComputedServiceData[]>([]);
   const [summary, setSummary] = useState<ABCAnalysisSummary | null>(null);
@@ -36,20 +35,26 @@ export default function App() {
   const [showWarnings, setShowWarnings] = useState(false);
   const [exportSuccess, setExportSuccess] = useState(false);
 
+  const handleBarberosConfirmed = (names: string[]) => {
+    setBarberos(names);
+    setStage('upload');
+  };
+
   const handleDataLoaded = (data: RawServiceData[], parseWarnings: string[]) => {
     setRawServices(data);
     setWarnings(parseWarnings);
-    
+
     // Perform Pareto ABC Math
     const { computed, summary: analysisSummary } = performABCAnalysis(data);
     setComputedServices(computed);
     setSummary(analysisSummary);
-    setDataLoaded(true);
     setShowWarnings(parseWarnings.length > 0);
+    setStage('dashboard');
   };
 
   const handleReset = () => {
-    setDataLoaded(false);
+    setStage('barberos');
+    setBarberos([]);
     setRawServices([]);
     setComputedServices([]);
     setSummary(null);
@@ -58,57 +63,59 @@ export default function App() {
     setShowWarnings(false);
   };
 
-  // Export ABC enriched dataset as a clean CSV back to the user
-  const handleExportCSV = () => {
-    if (computedServices.length === 0) return;
+  const handleBackToUpload = () => {
+    setStage('upload');
+    setRawServices([]);
+    setComputedServices([]);
+    setSummary(null);
+    setWarnings([]);
+    setSelectedService(null);
+    setShowWarnings(false);
+  };
 
-    // Construct headers
+  // Export: una fila por combinación servicio + barbero, igual al formato de origen
+  const handleExportCSV = () => {
+    if (rawServices.length === 0) return;
+
     const csvHeaders = [
-      'SKU',
-      'Nombre Servicio',
-      'Costo Unitario ($)',
-      'Precio Venta ($)',
-      'Unidades Vendidas',
-      'Ingreso Total ($)',
-      'Costo Total ($)',
-      'Utilidad Neta ($)',
-      'Margen (%)',
-      'Porcentaje Ingresos (%)',
-      'Porcentaje Acumulado (%)',
-      'Clase ABC'
+      'sku',
+      'nombre_servicio',
+      'costo_unitario',
+      'precio_venta',
+      'barbero',
+      'unidades_vendidas'
     ];
 
-    // Map rows
-    const csvRows = computedServices.map(item => [
-      `"${item.sku.replace(/"/g, '""')}"`,
-      `"${item.nombre_servicio.replace(/"/g, '""')}"`,
-      item.costo_unitario.toFixed(2),
-      item.precio_venta.toFixed(2),
-      item.unidades_vendidas,
-      item.ingreso_total.toFixed(2),
-      item.costo_total.toFixed(2),
-      item.utilidad_total.toFixed(2),
-      item.margen_porcentaje.toFixed(2),
-      item.porcentaje_ingresos.toFixed(2),
-      item.porcentaje_acumulado.toFixed(2),
-      item.categoria
+    const escapeField = (value: string) => {
+      if (/[",\n]/.test(value)) {
+        return `"${value.replace(/"/g, '""')}"`;
+      }
+      return value;
+    };
+
+    const csvRows = rawServices.map((item) => [
+      escapeField(item.sku),
+      escapeField(item.nombre_servicio),
+      String(item.costo_unitario),
+      String(item.precio_venta),
+      escapeField(item.barbero),
+      String(item.unidades_vendidas)
     ]);
 
-    // Build overall file content
     const csvContent = [
       csvHeaders.join(','),
-      ...csvRows.map(row => row.join(','))
+      ...csvRows.map((row) => row.join(','))
     ].join('\n');
 
-    // Trigger download
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
-    link.setAttribute('download', `BarberCut_ABC_Clasificado_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.setAttribute('download', `BarberCut_Ventas_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
 
     setExportSuccess(true);
     setTimeout(() => setExportSuccess(false), 2000);
@@ -121,14 +128,19 @@ export default function App() {
       <div className="absolute top-1/3 right-1/4 w-80 h-80 bg-sky-500/5 rounded-full blur-3xl pointer-events-none" />
 
       {/* Primary Navigation Hub */}
-      <Header onReset={handleReset} hasData={dataLoaded} />
+      <Header onReset={handleReset} hasData={stage === 'dashboard'} />
 
       {/* Main Container Stage */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-8 z-10">
-        
+
         <AnimatePresence mode="wait">
-          {!dataLoaded ? (
-            // Standard Welcome / Dropzone mode
+          {stage === 'barberos' && (
+            <motion.div key="barberos-screen">
+              <BarberoSetup onConfirm={handleBarberosConfirmed} initialBarberos={barberos} />
+            </motion.div>
+          )}
+
+          {stage === 'upload' && (
             <motion.div
               key="dropzone-screen"
               initial={{ opacity: 0, scale: 0.98 }}
@@ -137,8 +149,12 @@ export default function App() {
               transition={{ duration: 0.3 }}
               className="py-6 sm:py-10"
             >
-              <Dropzone onDataLoaded={handleDataLoaded} />
-              
+              <Dropzone
+                barberos={barberos}
+                onDataLoaded={handleDataLoaded}
+                onEditBarberos={() => setStage('barberos')}
+              />
+
               {/* Informative educational section underneath */}
               <div className="max-w-4xl mx-auto mt-16 border-t border-slate-900 pt-10 grid grid-cols-1 md:grid-cols-3 gap-6 text-xs text-slate-400">
                 <div className="space-y-2">
@@ -167,7 +183,9 @@ export default function App() {
                 </div>
               </div>
             </motion.div>
-          ) : (
+          )}
+
+          {stage === 'dashboard' && (
             // Full Analysis Dashboard Workspace
             <motion.div
               key="dashboard-screen"
@@ -180,7 +198,7 @@ export default function App() {
               {/* Back breadcrumb and export action top bar */}
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 border-b border-slate-900 pb-5">
                 <button
-                  onClick={handleReset}
+                  onClick={handleBackToUpload}
                   className="flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white transition-colors duration-150 py-1"
                 >
                   <ArrowLeft className="h-4 w-4" />
@@ -193,8 +211,8 @@ export default function App() {
                     onClick={handleExportCSV}
                     id="btn-exportar-csv"
                     className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold border transition-all ${
-                      exportSuccess 
-                        ? 'bg-emerald-950 text-emerald-400 border-emerald-500/20' 
+                      exportSuccess
+                        ? 'bg-emerald-950 text-emerald-400 border-emerald-500/20'
                         : 'bg-amber-400 text-slate-950 hover:bg-amber-300 font-bold border-amber-500/20 shadow-md shadow-amber-500/5 active:scale-[0.98]'
                     }`}
                   >
@@ -206,7 +224,7 @@ export default function App() {
                     ) : (
                       <>
                         <FileDown className="h-3.5 w-3.5" />
-                        <span>Descargar Reporte ABC (.CSV)</span>
+                        <span>Descargar Ventas (.CSV)</span>
                       </>
                     )}
                   </button>
@@ -220,8 +238,8 @@ export default function App() {
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-semibold text-slate-200">Alertas de Procesamiento de Tablas</span>
-                      <button 
-                        onClick={() => setShowWarnings(false)} 
+                      <button
+                        onClick={() => setShowWarnings(false)}
                         className="text-[10px] text-slate-500 hover:text-slate-350 underline"
                       >
                         Ocultar panel
@@ -254,10 +272,10 @@ export default function App() {
                   </span>
                 </div>
                 {summary && (
-                  <ServiceTable 
-                    data={computedServices} 
-                    summary={summary} 
-                    onSelectService={(serv) => setSelectedService(serv)} 
+                  <ServiceTable
+                    data={computedServices}
+                    summary={summary}
+                    onSelectService={(serv) => setSelectedService(serv)}
                   />
                 )}
               </div>
