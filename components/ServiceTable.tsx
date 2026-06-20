@@ -75,6 +75,13 @@ export default function ServiceTable({ data, summary, onSelectService }: Service
     </th>
   );
 
+  const counts = {
+    ALL: data.length,
+    A: summary.countA,
+    B: summary.countB,
+    C: summary.countC,
+  };
+
   return (
     <div className="rounded-2xl border border-slate-900 bg-slate-950/40 overflow-hidden">
       {/* Filtros */}
@@ -85,7 +92,7 @@ export default function ServiceTable({ data, summary, onSelectService }: Service
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar por nombre o SKU..."
+            placeholder="Buscar por SKU o nombre de servicio..."
             className="w-full bg-slate-900/60 border border-slate-800 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-400/30 focus:border-amber-400/30 transition-all"
           />
         </div>
@@ -94,13 +101,13 @@ export default function ServiceTable({ data, summary, onSelectService }: Service
             <button
               key={cls}
               onClick={() => setFilterClass(cls)}
-              className={`px-3 py-2 rounded-lg text-xxs font-bold border transition-all ${
+              className={`px-3 py-2 rounded-lg text-xxs font-bold border transition-all whitespace-nowrap ${
                 filterClass === cls
                   ? 'bg-amber-400 text-slate-950 border-amber-400'
                   : 'bg-slate-900/60 text-slate-400 border-slate-800 hover:border-slate-700'
               }`}
             >
-              {cls === 'ALL' ? 'Todos' : `Clase ${cls}`}
+              {cls === 'ALL' ? `Todos (${counts.ALL})` : `Clase ${cls} (${counts[cls]})`}
             </button>
           ))}
         </div>
@@ -111,10 +118,12 @@ export default function ServiceTable({ data, summary, onSelectService }: Service
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-slate-900">
-              <th className="px-4 py-3 text-xxs font-semibold uppercase tracking-wider text-slate-500 text-left">SKU</th>
-              <SortHeader label="Servicio" sortKeyName="nombre_servicio" className="text-left" />
-              <SortHeader label="Unidades" sortKeyName="unidades_vendidas" className="text-right" />
-              <SortHeader label="Ingreso Total" sortKeyName="ingreso_total" className="text-right" />
+              <th className="px-4 py-3 text-xxs font-semibold uppercase tracking-wider text-slate-500 text-left">SKU / Cód.</th>
+              <SortHeader label="Nombre del Servicio / Producto" sortKeyName="nombre_servicio" className="text-left" />
+              <th className="px-4 py-3 text-xxs font-semibold uppercase tracking-wider text-slate-500 text-right">Costo Unit.</th>
+              <th className="px-4 py-3 text-xxs font-semibold uppercase tracking-wider text-slate-500 text-right">Precio Vta.</th>
+              <SortHeader label="Uds. Vendidas" sortKeyName="unidades_vendidas" className="text-right" />
+              <SortHeader label="Ingreso Bruto Ac." sortKeyName="ingreso_total" className="text-right" />
               <SortHeader label="Margen" sortKeyName="margen_porcentaje" className="text-right" />
               <th className="px-4 py-3 text-xxs font-semibold uppercase tracking-wider text-slate-500 text-center">Clase</th>
             </tr>
@@ -130,8 +139,10 @@ export default function ServiceTable({ data, summary, onSelectService }: Service
                 <td className="px-4 py-3 text-xs font-medium text-slate-200 group-hover:text-amber-400 transition-colors">
                   {item.nombre_servicio}
                 </td>
+                <td className="px-4 py-3 text-xs text-slate-400 text-right font-mono">{formatCLP(item.costo_unitario)}</td>
+                <td className="px-4 py-3 text-xs text-slate-400 text-right font-mono">{formatCLP(item.precio_venta)}</td>
                 <td className="px-4 py-3 text-xs text-slate-400 text-right font-mono">{item.unidades_vendidas}</td>
-                <td className="px-4 py-3 text-xs text-slate-200 text-right font-mono">{formatCLP(item.ingreso_total)}</td>
+                <td className="px-4 py-3 text-xs text-amber-400 text-right font-mono font-semibold">{formatCLP(item.ingreso_total)}</td>
                 <td className="px-4 py-3 text-xs text-slate-400 text-right font-mono">{item.margen_porcentaje.toFixed(1)}%</td>
                 <td className="px-4 py-3 text-center">
                   <span className={`inline-flex items-center justify-center h-6 w-6 rounded-md text-xxs font-bold border ${CLASS_STYLES[item.categoria]}`}>
@@ -142,7 +153,7 @@ export default function ServiceTable({ data, summary, onSelectService }: Service
             ))}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-10 text-center text-xs text-slate-600">
+                <td colSpan={8} className="px-4 py-10 text-center text-xs text-slate-600">
                   No se encontraron servicios con esos filtros.
                 </td>
               </tr>

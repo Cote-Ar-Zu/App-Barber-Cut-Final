@@ -23,14 +23,24 @@ export default function Header({ onReset, hasData }: HeaderProps) {
           <span className="flex items-center justify-center h-8 w-8 rounded-lg bg-amber-400 text-slate-950 group-hover:bg-amber-300 transition-colors">
             <Scissors className="h-4 w-4" />
           </span>
-          <span className="text-sm font-bold tracking-tight text-white">
-            BarberCut <span className="text-amber-400 font-normal">ABC</span>
+          <span className="flex flex-col items-start leading-tight">
+            <span className="flex items-center gap-2">
+              <span className="text-sm font-bold tracking-tight text-white">
+                Barber<span className="text-amber-400">Cut</span>
+              </span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400 bg-amber-400/10 border border-amber-400/20 rounded-full px-2 py-0.5">
+                Pareto ABC
+              </span>
+            </span>
+            <span className="text-xxs text-slate-500 hidden sm:inline">
+              Analizador de Control de Inventario y Servicios
+            </span>
           </span>
         </button>
 
         {hasData && (
           <span className="text-xxs font-mono uppercase tracking-widest text-slate-500 hidden sm:inline">
-            Análisis de Clasificación de Servicios
+            Ley de Pareto 80/20
           </span>
         )}
       </div>

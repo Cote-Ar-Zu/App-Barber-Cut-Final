@@ -202,7 +202,7 @@ export default function App() {
                   className="flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white transition-colors duration-150 py-1"
                 >
                   <ArrowLeft className="h-4 w-4" />
-                  <span>Volver a carga de archivo</span>
+                  <span>Cargar nuevo archivo</span>
                 </button>
 
                 <div className="flex flex-wrap items-center gap-3">
@@ -224,7 +224,7 @@ export default function App() {
                     ) : (
                       <>
                         <FileDown className="h-3.5 w-3.5" />
-                        <span>Descargar Ventas (.CSV)</span>
+                        <span>Descargar Reporte ABC (.CSV)</span>
                       </>
                     )}
                   </button>

@@ -51,16 +51,24 @@ export default function ParetoChart({ data, totalRevenue }: ParetoChartProps) {
     <div className="rounded-2xl border border-slate-900 bg-slate-950/40 p-4 sm:p-6">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-sm font-bold text-white">Curva de Pareto — Ingresos por Servicio</h3>
-          <p className="text-xxs text-slate-500 mt-0.5">80% de ingresos resaltado con línea punteada</p>
+          <h3 className="text-sm font-bold text-white flex items-center gap-2">
+            Curva de Distribución de Pareto
+          </h3>
+          <p className="text-xxs text-slate-500 mt-0.5">Barras: Ingreso por servicio ($) · Línea: Porcentaje acumulado (%)</p>
         </div>
         <div className="flex items-center gap-4 text-xxs">
-          {(['A', 'B', 'C'] as const).map((cls) => (
-            <span key={cls} className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full" style={{ backgroundColor: CLASS_COLOR[cls] }} />
-              <span className="text-slate-400">Clase {cls}</span>
-            </span>
-          ))}
+          <span className="flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full" style={{ backgroundColor: CLASS_COLOR.A }} />
+            <span className="text-slate-400">Clase A (Top 80%)</span>
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full" style={{ backgroundColor: CLASS_COLOR.B }} />
+            <span className="text-slate-400">Clase B (80% a 95%)</span>
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full" style={{ backgroundColor: CLASS_COLOR.C }} />
+            <span className="text-slate-400">Clase C (Resto 5%)</span>
+          </span>
         </div>
       </div>
 
